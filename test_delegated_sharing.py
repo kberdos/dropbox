@@ -251,6 +251,106 @@ class DelegatedSharingTests(unittest.TestCase):
         self.assertEqual(file, b'shared data')
         file = u7.download_file("shared_file")
         self.assertEqual(file, b'shared data')
+    
+    def test_tree_override(self):
+        """
+        Test sharing files BFS style
+        1 -> 2 -> 4
+               -> 5
+          -> 3 -> 6
+               -> 7
+        """
+        users = []
+        for i in range(7):
+            create_user(f"usr{i+1}", "pswd")
+            users.append(authenticate_user(f"usr{i+1}", "pswd"))
+        
+        u1, u2, u3, u4, u5, u6, u7 = users
+        
+        u1.upload_file("shared_file", b'shared data')
+        
+        u1.share_file("shared_file", "usr2")
+        u1.share_file("shared_file", "usr3")
+        u2.receive_file("shared_file", "usr1")
+        u3.receive_file("shared_file", "usr1")
+        u2.share_file("shared_file", "usr4")
+        u2.share_file("shared_file", "usr5")
+        u3.share_file("shared_file", "usr6")
+        u3.share_file("shared_file", "usr7")
+        u4.receive_file("shared_file", "usr2")
+        u5.receive_file("shared_file", "usr2")
+        u6.receive_file("shared_file", "usr3")
+        u7.receive_file("shared_file", "usr3")
+        
+        u1.upload_file("shared_file", b'new data 0')
+        for user in users:
+            file = user.download_file("shared_file")
+            self.assertEqual(file, b'new data 0')
+        
+        u3.upload_file("shared_file", b'new data 3')
+        for user in users:
+            file = user.download_file("shared_file")
+            self.assertEqual(file, b'new data 3')
+        
+        u5.upload_file("shared_file", b'new data 5')
+        for user in users:
+            file = user.download_file("shared_file")
+            self.assertEqual(file, b'new data 5')
+            
+        u7.upload_file("shared_file", b'new data 7')
+        for user in users:
+            file = user.download_file("shared_file")
+            self.assertEqual(file, b'new data 7')
+    
+    def test_tree_append(self):
+        """
+        Test sharing files BFS style
+        1 -> 2 -> 4
+               -> 5
+          -> 3 -> 6
+               -> 7
+        """
+        users = []
+        for i in range(7):
+            create_user(f"usr{i+1}", "pswd")
+            users.append(authenticate_user(f"usr{i+1}", "pswd"))
+        
+        u1, u2, u3, u4, u5, u6, u7 = users
+        
+        u1.upload_file("shared_file", b'shared data')
+        
+        u1.share_file("shared_file", "usr2")
+        u1.share_file("shared_file", "usr3")
+        u2.receive_file("shared_file", "usr1")
+        u3.receive_file("shared_file", "usr1")
+        u2.share_file("shared_file", "usr4")
+        u2.share_file("shared_file", "usr5")
+        u3.share_file("shared_file", "usr6")
+        u3.share_file("shared_file", "usr7")
+        u4.receive_file("shared_file", "usr2")
+        u5.receive_file("shared_file", "usr2")
+        u6.receive_file("shared_file", "usr3")
+        u7.receive_file("shared_file", "usr3")
+        
+        u1.append_file("shared_file", b'1')
+        for user in users:
+            file = user.download_file("shared_file")
+            self.assertEqual(file, b'shared data1')
+            
+        u7.append_file("shared_file", b'7')
+        for user in users:
+            file = user.download_file("shared_file")
+            self.assertEqual(file, b'shared data17')
+        
+        u3.append_file("shared_file", b'3')
+        for user in users:
+            file = user.download_file("shared_file")
+            self.assertEqual(file, b'shared data173')
+        
+        u5.append_file("shared_file", b'5')
+        for user in users:
+            file = user.download_file("shared_file")
+            self.assertEqual(file, b'shared data1735')
 
 
 # Start the REPL if this file is launched as the main program
