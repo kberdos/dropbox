@@ -302,12 +302,9 @@ class TestSharingFunctionality(unittest.TestCase):
         u1.download_file("shared_file")
 
         u0.revoke_file("shared_file", "usr1")
-        u0.upload_file("shared_file", b'new shared data')
-
-        try:
-            self.assertNotEqual(b'new shared data', u1.download_file("shared_file"))
-        except util.DropboxError:
-            pass
+        
+        with self.assertRaises(util.DropboxError):
+            u1.download_file("shared_file")
 
     def test_error_if_not_received_shared_file(self):
         """Tests that an error is raised if recipient did not accept file."""
@@ -316,11 +313,9 @@ class TestSharingFunctionality(unittest.TestCase):
 
         u1.upload_file("shared_file", b'shared data')
         u1.share_file("shared_file", "usr2")
-
-        try:
-            self.assertEqual(u2.download_file("shared_file"), b'shared data')
-        except util.DropboxError:
-            pass
+        
+        with self.assertRaises(util.DropboxError):
+            u2.download_file("shared_file")
 
         u2.receive_file("shared_file", "usr1")
         self.assertEqual(u2.download_file("shared_file"), b'shared data')
@@ -338,11 +333,9 @@ class TestSharingFunctionality(unittest.TestCase):
         self.assertEqual(u2.download_file("f"), b'shared data')
 
         u1.revoke_file('f', 'usr2')
-        try:
+        
+        with self.assertRaises(util.DropboxError):
             u2.upload_file('f', b'replaced data')
-            self.assertEqual(u1.download_file("f"), b'shared data')
-        except (util.DropboxError, ValueError):
-            pass
 
     def test_revoke_append(self):
         """Tests whether a revoked user can append to a previously-shared file."""
@@ -357,11 +350,9 @@ class TestSharingFunctionality(unittest.TestCase):
         self.assertEqual(u2.download_file("f"), b'shared data')
 
         u1.revoke_file('f', 'usr2')
-        try:
-            u2.append_file('f', b' new')
-            self.assertEqual(u1.download_file("f"), b'shared data')
-        except (util.DropboxError, ValueError):
-            pass
+        
+        with self.assertRaises(util.DropboxError):
+            u2.append_file('f', b'new')
 
     def test_share_nonexistent_file(self):
         """Tests error handling of sharing a non-existent file."""
