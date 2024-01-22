@@ -29,76 +29,119 @@ class DelegatedSharingTests(unittest.TestCase):
 
     def test_chain(self):
         """Test sharing chain 1 -> 2 -> 3"""
+        users = []
+        for i in range(3):
+            create_user(f"usr{i}", "pswd")
+            users.append(authenticate_user(f"usr{i}", "pswd"))
 
-        create_user("usr1", "pswd")
-        create_user("usr2", "pswd")
-        create_user("usr3", "pswd")
+        users[0].upload_file("shared_file", b'shared data')
+        users[0].share_file("shared_file", "usr1")
+        users[1].receive_file("shared_file", "usr0")
+        users[1].share_file("shared_file", "usr2")
+        users[2].receive_file("shared_file", "usr1")
         
-        u1 = authenticate_user("usr1", "pswd")
-        u2 = authenticate_user("usr2", "pswd")
-        u3 = authenticate_user("usr3", "pswd")
+        for user in users:
+            self.assertEqual(user.download_file("shared_file"), b'shared data')
 
-        u1.upload_file("shared_file", b'shared data')
-        u1.share_file("shared_file", "usr2")
-        u2.receive_file("shared_file", "usr1")
-        u2.share_file("shared_file", "usr3")
-        u3.receive_file("shared_file", "usr2")
-        
-        u1_file = u1.download_file("shared_file")
-        u2_file = u2.download_file("shared_file")
-        u3_file = u3.download_file("shared_file")
-
-        self.assertEqual(u1_file, b'shared data')
-        self.assertEqual(u2_file, b'shared data')
-        self.assertEqual(u3_file, b'shared data')
-    
     def test_chain_receive(self):
         """
         Test sharing chain 1 -> 2 -> 3
-        Check that 2 needs to receive file before sharing with 3
+        Check that 2 needs to receive file before sharing or downloading
         """
+        users = []
+        for i in range(3):
+            create_user(f"usr{i}", "pswd")
+            users.append(authenticate_user(f"usr{i}", "pswd"))
 
-        create_user("usr1", "pswd")
-        create_user("usr2", "pswd")
-        create_user("usr3", "pswd")
-        
-        u1 = authenticate_user("usr1", "pswd")
-        u2 = authenticate_user("usr2", "pswd")
-        u3 = authenticate_user("usr3", "pswd")
-
-        u1.upload_file("shared_file", b'shared data')
-        u1.share_file("shared_file", "usr2")
+        users[0].upload_file("shared_file", b'shared data')
+        users[0].share_file("shared_file", "usr1")
         
         with self.assertRaises(util.DropboxError):
-            u2.share_file("shared_file", "usr3")
-    
+            users[1].download_file("shared_file")
+        
+        with self.assertRaises(util.DropboxError):
+            users[1].share_file("shared_file", "usr2")
+        
+        users[1].receive_file("shared_file", "usr0")
+        users[1].share_file("shared_file", "usr2")
+        
+        with self.assertRaises(util.DropboxError):
+            users[2].download_file("shared_file")
+        
+        users[2].receive_file("shared_file", "usr1")
+        users[2].download_file("shared_file")
+
     def test_chain_revoke(self):
         """
         Test sharing chain 1 -> 2 -> 3
         Both 2 & 3 lose access after 1 revokes file from 2
         """
-        
-        create_user("usr1", "pswd")
-        create_user("usr2", "pswd")
-        create_user("usr3", "pswd")
-        
-        u1 = authenticate_user("usr1", "pswd")
-        u2 = authenticate_user("usr2", "pswd")
-        u3 = authenticate_user("usr3", "pswd")
+        users = []
+        for i in range(3):
+            create_user(f"usr{i}", "pswd")
+            users.append(authenticate_user(f"usr{i}", "pswd"))
 
-        u1.upload_file("shared_file", b'shared data')
-        u1.share_file("shared_file", "usr2")
-        u2.receive_file("shared_file", "usr1")
-        u2.share_file("shared_file", "usr3")
-        u3.receive_file("shared_file", "usr2")
+        users[0].upload_file("shared_file", b'shared data')
+        users[0].share_file("shared_file", "usr1")
+        users[1].receive_file("shared_file", "usr0")
+        users[1].share_file("shared_file", "usr2")
+        users[2].receive_file("shared_file", "usr1")
         
-        u1.revoke_file("shared_file", "usr2")
-        
-        with self.assertRaises(util.DropboxError):
-            u2.download_file("shared_file")
+        users[0].revoke_file("shared_file", "usr1")
         
         with self.assertRaises(util.DropboxError):
-            u3.download_file("shared_file")
+            users[1].download_file("shared_file")
+        
+        with self.assertRaises(util.DropboxError):
+            users[2].download_file("shared_file")
+    
+    def test_chain_overwrite(self):
+        users = []
+        for i in range(3):
+            create_user(f"usr{i}", "pswd")
+            users.append(authenticate_user(f"usr{i}", "pswd"))
+
+        users[0].upload_file("shared_file", b'shared data')
+        users[0].share_file("shared_file", "usr1")
+        users[1].receive_file("shared_file", "usr0")
+        users[1].share_file("shared_file", "usr2")
+        users[2].receive_file("shared_file", "usr1")
+
+        users[0].upload_file("shared_file", b'new data 0')
+        for user in users:
+            self.assertEqual(user.download_file("shared_file"), b'new data 0')
+        
+        users[1].upload_file("shared_file", b'new data 1')
+        for user in users:
+            self.assertEqual(user.download_file("shared_file"), b'new data 1')
+        
+        users[2].upload_file("shared_file", b'new data 2')
+        for user in users:
+            self.assertEqual(user.download_file("shared_file"), b'new data 2')
+    
+    def test_chain_append(self):
+        users = []
+        for i in range(3):
+            create_user(f"usr{i}", "pswd")
+            users.append(authenticate_user(f"usr{i}", "pswd"))
+
+        users[0].upload_file("shared_file", b'shared data')
+        users[0].share_file("shared_file", "usr1")
+        users[1].receive_file("shared_file", "usr0")
+        users[1].share_file("shared_file", "usr2")
+        users[2].receive_file("shared_file", "usr1")
+
+        users[0].append_file("shared_file", b'0')
+        for user in users:
+            self.assertEqual(user.download_file("shared_file"), b'shared data0')
+        
+        users[1].append_file("shared_file", b'1')
+        for user in users:
+            self.assertEqual(user.download_file("shared_file"), b'shared data01')
+        
+        users[2].append_file("shared_file", b'2')
+        for user in users:
+            self.assertEqual(user.download_file("shared_file"), b'shared data012')
         
     def test_tree_DFS(self):
         """
@@ -111,8 +154,7 @@ class DelegatedSharingTests(unittest.TestCase):
         users = []
         for i in range(7):
             create_user(f"usr{i+1}", "pswd")
-            u = authenticate_user(f"usr{i+1}", "pswd")
-            users.append(u)
+            users.append(authenticate_user(f"usr{i+1}", "pswd"))
         
         u1, u2, u3, u4, u5, u6, u7 = users
         
@@ -146,8 +188,7 @@ class DelegatedSharingTests(unittest.TestCase):
         users = []
         for i in range(7):
             create_user(f"usr{i+1}", "pswd")
-            u = authenticate_user(f"usr{i+1}", "pswd")
-            users.append(u)
+            users.append(authenticate_user(f"usr{i+1}", "pswd"))
         
         u1, u2, u3, u4, u5, u6, u7 = users
         
@@ -174,8 +215,7 @@ class DelegatedSharingTests(unittest.TestCase):
         users = []
         for i in range(7):
             create_user(f"usr{i+1}", "pswd")
-            u = authenticate_user(f"usr{i+1}", "pswd")
-            users.append(u)
+            users.append(authenticate_user(f"usr{i+1}", "pswd"))
         
         u1, u2, u3, u4, u5, u6, u7 = users
         
