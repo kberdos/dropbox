@@ -62,21 +62,6 @@ class Keyserver:
         else:
             raise ValueError("IdentifierAlreadyTaken")
 
-    def Delete(self, identifier: str) -> None:
-        """
-        Deletes a pk @ a String tag.
-
-        Params:
-            > String - str
-
-        Returns: None or raises ValueError
-        """
-        self._validate(identifier)
-        if identifier in self.data:
-            del self.data[identifier]
-        else:
-            raise ValueError("IdentifierAlreadyTaken")
-
     ##################################################################
     # NOTE: the following functions are provided for testing ONLY--you
     # can use them to test functionality or attacks, but you should
