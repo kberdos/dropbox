@@ -142,8 +142,8 @@ def AsymmetricEncrypt(EncryptionKey: AsymmetricEncryptKey, plaintext: bytes) -> 
             label=None
         ))
         return c_bytes
-    except:
-        raise ValueError("Plaintext size too large")
+    except ValueError as e:
+        raise ValueError(f"Crypto library returned error during encryption:  plaintext probably too large (was {len(plaintext)} bytes)") from e
 
 def AsymmetricDecrypt(DecryptionKey: AsymmetricDecryptKey, ciphertext: bytes) -> bytes:
     """
