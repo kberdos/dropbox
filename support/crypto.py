@@ -132,15 +132,18 @@ def AsymmetricEncrypt(EncryptionKey: AsymmetricEncryptKey, plaintext: bytes) -> 
         > plaintext - bytes
      Returns: ciphertext bytes
     """
-    check_type(EncryptionKey, AsymmetricEncryptKey, "EncryptionKey", "AsymmetricEncrypt")
-    check_type(plaintext, bytes, "plaintext", "AsymmetricEncrypt")
+    try:
+        check_type(EncryptionKey, AsymmetricEncryptKey, "EncryptionKey", "AsymmetricEncrypt")
+        check_type(plaintext, bytes, "plaintext", "AsymmetricEncrypt")
 
-    c_bytes = EncryptionKey.libPubKey.encrypt(plaintext, padding.OAEP(
-        mgf=padding.MGF1(algorithm=hashes.SHA512()),
-        algorithm=hashes.SHA512(),
-        label=None
-    ))
-    return c_bytes
+        c_bytes = EncryptionKey.libPubKey.encrypt(plaintext, padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA512()),
+            algorithm=hashes.SHA512(),
+            label=None
+        ))
+        return c_bytes
+    except ValueError as e:
+        raise ValueError(f"Crypto library returned error during encryption:  plaintext probably too large (was {len(plaintext)} bytes)") from e
 
 def AsymmetricDecrypt(DecryptionKey: AsymmetricDecryptKey, ciphertext: bytes) -> bytes:
     """
@@ -362,7 +365,7 @@ def SymmetricEncrypt(key: bytes, iv: bytes, plaintext: bytes) -> bytes:
     check_type(plaintext, bytes, "plaintext", "SymmetricEncrypt")
 
     if len(key) != 16:
-        raise ValueError
+        raise ValueError("Key must be 16 bytes")
 
     padder = sym_padding.PKCS7(128).padder()
     padded_data = padder.update(plaintext)
