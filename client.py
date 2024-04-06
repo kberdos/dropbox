@@ -36,7 +36,7 @@ class User:
     def upload_file(self, filename: str, data: bytes) -> None:
         """
         The specification for this function is at:
-        http://cs.brown.edu/courses/csci1660/dropbox-wiki/client-api/storage/upload-file.html
+        https://brown-csci1660.github.io/dropbox-wiki/client-api/storage/upload-file.html
         """
         # TODO: Implement
         raise util.DropboxError("Not Implemented")
@@ -44,7 +44,7 @@ class User:
     def download_file(self, filename: str) -> bytes:
         """
         The specification for this function is at:
-        http://cs.brown.edu/courses/csci1660/dropbox-wiki/client-api/storage/download-file.html
+        https://brown-csci1660.github.io/dropbox-wiki/client-api/storage/download-file.html
         """
         # TODO: Implement
         raise util.DropboxError("Not Implemented")
@@ -52,7 +52,7 @@ class User:
     def append_file(self, filename: str, data: bytes) -> None:
         """
         The specification for this function is at:
-        http://cs.brown.edu/courses/csci1660/dropbox-wiki/client-api/storage/append-file.html
+        https://brown-csci1660.github.io/dropbox-wiki/client-api/storage/append-file.html
         """
         # TODO: Implement
         raise util.DropboxError("Not Implemented")
@@ -60,7 +60,7 @@ class User:
     def share_file(self, filename: str, recipient: str) -> None:
         """
         The specification for this function is at:
-        http://cs.brown.edu/courses/csci1660/dropbox-wiki/client-api/sharing/share-file.html
+        https://brown-csci1660.github.io/dropbox-wiki/client-api/sharing/share-file.html
         """
         # TODO: Implement
         raise util.DropboxError("Not Implemented")
@@ -68,7 +68,7 @@ class User:
     def receive_file(self, filename: str, sender: str) -> None:
         """
         The specification for this function is at:
-        http://cs.brown.edu/courses/csci1660/dropbox-wiki/client-api/sharing/receive-file.html
+        https://brown-csci1660.github.io/dropbox-wiki/client-api/sharing/receive-file.html
         """
         # TODO: Implement
         raise util.DropboxError("Not Implemented")
@@ -76,7 +76,7 @@ class User:
     def revoke_file(self, filename: str, old_recipient: str) -> None:
         """
         The specification for this function is at:
-        http://cs.brown.edu/courses/csci1660/dropbox-wiki/client-api/sharing/revoke-file.html
+        https://brown-csci1660.github.io/dropbox-wiki/client-api/sharing/revoke-file.html
         """
         # TODO: Implement
         raise util.DropboxError("Not Implemented")
@@ -84,7 +84,7 @@ class User:
 def create_user(username: str, password: str) -> User:
     """
     The specification for this function is at:
-    http://cs.brown.edu/courses/csci1660/dropbox-wiki/client-api/authentication/create-user.html
+    https://brown-csci1660.github.io/dropbox-wiki/client-api/authentication/create-user.html
     """
     # TODO: Implement
     raise util.DropboxError("Not Implemented")
@@ -92,7 +92,7 @@ def create_user(username: str, password: str) -> User:
 def authenticate_user(username: str, password: str) -> User:
     """
     The specification for this function is at:
-    http://cs.brown.edu/courses/csci1660/dropbox-wiki/client-api/authentication/authenticate-user.html
+    https://brown-csci1660.github.io/dropbox-wiki/client-api/authentication/authenticate-user.html
     """
     # TODO: Implement
     raise util.DropboxError("Not Implemented")
