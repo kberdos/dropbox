@@ -229,6 +229,7 @@ class TestFileFunctionality(unittest.TestCase):
         self.assertEqual(u.download_file("f"), b'1234567890')
         self.assertEqual(u2.download_file("f"), b'abcdefghij')
 
+
 class TestSharingFunctionality(unittest.TestCase):
     """
     This class tests the functionality of the sharing implementation
@@ -302,7 +303,7 @@ class TestSharingFunctionality(unittest.TestCase):
         u1.download_file("shared_file")
 
         u0.revoke_file("shared_file", "usr1")
-        
+
         with self.assertRaises(util.DropboxError):
             u1.download_file("shared_file")
 
@@ -313,9 +314,13 @@ class TestSharingFunctionality(unittest.TestCase):
 
         u1.upload_file("shared_file", b'shared data')
         u1.share_file("shared_file", "usr2")
-        
-        with self.assertRaises(util.DropboxError):
-            u2.download_file("shared_file")
+
+        # Alternative implementation:  download without receive is valid,
+        # so long as file contents are correct.
+        try:
+            self.assertEqual(u2.download_file("shared_file"), b'shared data')
+        except util.DropboxError:
+            pass
 
         u2.receive_file("shared_file", "usr1")
         self.assertEqual(u2.download_file("shared_file"), b'shared data')
@@ -333,9 +338,26 @@ class TestSharingFunctionality(unittest.TestCase):
         self.assertEqual(u2.download_file("f"), b'shared data')
 
         u1.revoke_file('f', 'usr2')
-        
-        with self.assertRaises(util.DropboxError):
+
+        # This assertion covers multiple valid implementations, due to
+        # ambiguity in the specifiation on users with files of the
+        # same name.  Specifically, if after usr2 is revoked from file
+        # f, and user2 attempts to upload to file f, the following
+        # behaviors are valid:
+        #
+        # 1. The upload MAY create a completely new file "f" for usr2,
+        # as if they had never been shared another file of the same
+        # name,
+        # OR
+        # 2. The client MAY consider the the file name "f" for user2
+        # to be irreversably mapped to the file from which usr2 was
+        # revoked, which should raise a DropboxError because usr2 no
+        # longer has access
+        try:
             u2.upload_file('f', b'replaced data')
+            self.assertEqual(u1.download_file("f"), b'shared data')  # Case 1
+        except (util.DropboxError, ValueError):
+            pass  # Case 2
 
     def test_revoke_append(self):
         """Tests whether a revoked user can append to a previously-shared file."""
@@ -350,7 +372,11 @@ class TestSharingFunctionality(unittest.TestCase):
         self.assertEqual(u2.download_file("f"), b'shared data')
 
         u1.revoke_file('f', 'usr2')
-        
+
+        # Since appending to a non-existant file is invalid, appending
+        # immediately after revocation should always return an error,
+        # regardless of implementation for files of the same name.
+        # For more info, see note in test_revoke_upload.
         with self.assertRaises(util.DropboxError):
             u2.append_file('f', b'new')
 
